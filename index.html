@@ -168,19 +168,24 @@
       margin-top: 0.5rem;
     }
 
-    .duct-option {
-      display: flex;
-      align-items: flex-start;
-      gap: 0.5rem;
-      padding: 0.5rem 0.6rem;
-      border-radius: 8px;
-      border: 1px solid #ddd;
-      background: #fafafa;
-    }
+.duct-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background: #fafafa;
+  width: 100%;
+  flex-wrap: wrap;         /* allow text to wrap under the radio */
+  box-sizing: border-box;
+}
 
-    .duct-option input[type="radio"] {
-      margin-top: 0.2rem;
-    }
+.duct-option > div {
+  flex: 1 1 auto;          /* text block takes remaining width */
+  min-width: 0;            /* prevents overflow */
+}
+
 
     .duct-text-main {
       font-size: 0.9rem;
@@ -612,6 +617,7 @@
 </script>
 </body>
 </html>
+
 
 
 
