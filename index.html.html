@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Vent Survey Log</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 0;
+      padding: 1rem;
+      background: #f5f5f5;
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      margin-bottom: 0.5rem;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem 1.25rem;
+    }
+
+    @media (max-width: 600px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+
+    input, textarea, button {
+      font-family: inherit;
+      font-size: 1rem;
+    }
+
+    input, textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 0.5rem 0.6rem;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      background: #fafafa;
+    }
+
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: #007aff;
+      background: #ffffff;
+      box-shadow: 0 0 0 2px rgba(0,122,255,0.15);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 60px;
+    }
+
+    .inline-group {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+      align-items: end;
+    }
+
+    .inline-group .field {
+      min-width: 0;
+    }
+
+    .readonly {
+      background: #eee;
+    }
+
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    button {
+      border-radius: 999px;
+      border: none;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      background: #007aff;
+      color: white;
+      font-weight: 600;
+    }
+
+    button.secondary {
+      background: #e0e0e0;
+      color: #333;
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 0.35rem 0.4rem;
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    th {
+      background: #f0f0f0;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    .table-wrapper {
+      max-height: 250px;
+      overflow: auto;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      background: white;
+    }
+
+    .small-note {
+      font-size: 0.75rem;
+      color: #555;
+      margin-top: 0.25rem;
+    }
+
+    .csv-output {
+      width: 100%;
+      box-sizing: border-box;
+      margin-top: 0.5rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.8rem;
+      min-height: 80px;
+    }
+
+    /* Duct condition styling */
+    .duct-group {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .duct-option {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      padding: 0.5rem 0.6rem;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      background: #fafafa;
+    }
+
+    .duct-option input[type="radio"] {
+      margin-top: 0.2rem;
+    }
+
+    .duct-text-main {
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .duct-text-sub {
+      font-size: 0.75rem;
+      color: #555;
+      margin-top: 0.15rem;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Vent Survey Logger</h1>
+
+  <!-- INPUT FORM -->
+  <div class="card">
+    <h2 style="font-size:1.1rem; margin-top:0;">Current Entry</h2>
+    <div class="grid">
+      <div>
+        <label for="surveyor">Surveyor</label>
+        <input id="surveyor" type="text" autocomplete="name">
+      </div>
+      <div>
+        <label for="date">Date (DDMMYYYY)</label>
+        <!-- numeric keypad, 8 digits, will be formatted to DD/MM/YYYY in CSV -->
+        <input id="date" type="text" inputmode="numeric" maxlength="8" placeholder="DDMMYYYY">
+      </div>
+      <div>
+        <label for="station">Station</label>
+        <input id="station" type="text">
+      </div>
+      <div>
+        <label for="location">Location</label>
+        <input id="location" type="text">
+      </div>
+      <div>
+        <label for="activity">Activity</label>
+        <input id="activity" type="text">
+      </div>
+    </div>
+
+    <div style="margin-top:1rem;">
+      <label>Area (H × W)</label>
+      <div class="inline-group">
+        <div class="field">
+          <label for="height" style="font-weight:500;">Height</label>
+          <input id="height" type="number" inputmode="decimal" step="any" placeholder="H">
+        </div>
+        <div class="field">
+          <label for="width" style="font-weight:500;">Width</label>
+          <input id="width" type="number" inputmode="decimal" step="any" placeholder="W">
+        </div>
+        <div class="field">
+          <label for="area">Area (auto)</label>
+          <input id="area" type="number" readonly class="readonly">
+        </div>
+      </div>
+      <div class="small-note">
+        Change Height or Width and Area will update automatically. Only Area goes into the CSV.
+      </div>
+    </div>
+
+    <div class="grid" style="margin-top:1rem;">
+      <div>
+        <label for="v1">V1</label>
+        <input id="v1" type="number" inputmode="decimal" step="any">
+      </div>
+      <div>
+        <label for="v2">V2</label>
+        <input id="v2" type="number" inputmode="decimal" step="any">
+      </div>
+      <div>
+        <label for="v3">V3</label>
+        <input id="v3" type="number" inputmode="decimal" step="any">
+      </div>
+      <div>
+        <label for="v4">V4</label>
+        <input id="v4" type="number" inputmode="decimal" step="any">
+      </div>
+      <div>
+        <label for="v5">V5</label>
+        <input id="v5" type="number" inputmode="decimal" step="any">
+      </div>
+      <div>
+        <label for="dryBulb">Dry Bulb</label>
+        <input id="dryBulb" type="number" inputmode="decimal" step="any">
+      </div>
+      <div>
+        <label for="wetBulb">Wet Bulb</label>
+        <input id="wetBulb" type="number" inputmode="decimal" step="any">
+      </div>
+      <div>
+        <label for="pressure">Pressure</label>
+        <input id="pressure" type="number" inputmode="decimal" step="any">
+      </div>
+      <div>
+        <label for="no2">N02</label>
+        <input id="no2" type="number" inputmode="decimal" step="any">
+      </div>
+      <div>
+        <label for="co4">C04</label>
+        <input id="co4" type="number" inputmode="decimal" step="any">
+      </div>
+      <div>
+        <label for="o2">O2</label>
+        <input id="o2" type="number" inputmode="decimal" step="any">
+      </div>
+      <div>
+        <label for="so2">S02</label>
+        <input id="so2" type="number" inputmode="decimal" step="any">
+      </div>
+      <div>
+        <label for="h2s">H2S</label>
+        <input id="h2s" type="number" inputmode="decimal" step="any">
+      </div>
+      <div>
+        <label for="c0">C0</label>
+        <input id="c0" type="number" inputmode="decimal" step="any">
+      </div>
+      <div>
+        <label for="nh3">NH3</label>
+        <input id="nh3" type="number" inputmode="decimal" step="any">
+      </div>
+    </div>
+
+    <div style="margin-top:1rem;">
+      <label for="comments">Comments</label>
+      <textarea id="comments"></textarea>
+    </div>
+
+    <!-- Duct condition checklist -->
+    <div style="margin-top:1rem;">
+      <label>Duct condition</label>
+      <div class="duct-group">
+        <label class="duct-option">
+          <input type="radio" name="ductCondition" value="Good">
+          <div>
+            <div class="duct-text-main">Good</div>
+            <div class="duct-text-sub">
+              Small holes, 80% of air reaching work area (no action)
+            </div>
+          </div>
+        </label>
+
+        <label class="duct-option">
+          <input type="radio" name="ductCondition" value="Fair">
+          <div>
+            <div class="duct-text-main">Fair</div>
+            <div class="duct-text-sub">
+              A few small holes/tear, 1 larger hole: Hazard report required
+            </div>
+          </div>
+        </label>
+
+        <label class="duct-option">
+          <input type="radio" name="ductCondition" value="Poor">
+          <div>
+            <div class="duct-text-main">Poor</div>
+            <div class="duct-text-sub">
+              Large holes throughout the bag run, defect plan required
+            </div>
+          </div>
+        </label>
+      </div>
+    </div>
+
+    <div class="buttons">
+      <button type="button" onclick="addRow()">Add Row</button>
+      <button type="button" class="secondary" onclick="clearForm()">Clear Form</button>
+    </div>
+    <div class="small-note">
+      Tip: Use “Add Row” for each measurement. You can then export all rows as one CSV.
+    </div>
+  </div>
+
+  <!-- TABLE OF ROWS -->
+  <div class="card">
+    <h2 style="font-size:1.1rem; margin-top:0;">Saved Rows</h2>
+    <div class="table-wrapper">
+      <table id="rowsTable">
+        <thead>
+        <tr id="headerRow"></tr>
+        </thead>
+        <tbody id="tableBody">
+        <tr><td colspan="26" style="text-align:center; color:#777;">No rows yet.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="buttons" style="margin-top:0.75rem;">
+      <button type="button" onclick="exportCSV()">Export CSV</button>
+      <button type="button" class="secondary" onclick="copyCSV()">Copy CSV</button>
+      <button type="button" class="secondary" onclick="clearAllRows()">Clear All Rows</button>
+    </div>
+    <div class="small-note">
+      “Export CSV” creates a downloadable file. “Copy CSV” puts the text in your clipboard area below so you can long-press, copy, and paste into Mail / Files / etc.
+    </div>
+
+    <textarea id="csvOutput" class="csv-output" placeholder="CSV text will appear here after export or copy..."></textarea>
+  </div>
+</div>
+
+<script>
+  // CSV headers IN ORDER
+  const headers = [
+    "Surveyor",
+    "Date",
+    "Station",
+    "Location",
+    "Activity",
+    "Area",
+    "V1",
+    "V2",
+    "V3",
+    "V4",
+    "V5",
+    "Dry Bulb",
+    "Wet Bulb",
+    "Pressure",
+    "N02",
+    "C04",
+    "O2",
+    "S02",
+    "H2S",
+    "C0",
+    "NH3",
+    "Comments",
+    "Duct condition - good",
+    "Duct condition - fair",
+    "Duct condition - poor"
+  ];
+
+  const rows = [];
+
+  // Build table header
+  const headerRowEl = document.getElementById("headerRow");
+  headers.forEach(h => {
+    const th = document.createElement("th");
+    th.textContent = h;
+    headerRowEl.appendChild(th);
+  });
+
+  const tableBody = document.getElementById("tableBody");
+  const csvOutput = document.getElementById("csvOutput");
+
+  function getValue(id) {
+    return document.getElementById(id).value.trim();
+  }
+
+  function computeArea() {
+    const hVal = parseFloat(document.getElementById("height").value);
+    const wVal = parseFloat(document.getElementById("width").value);
+    const areaEl = document.getElementById("area");
+
+    if (!isNaN(hVal) && !isNaN(wVal)) {
+      areaEl.value = hVal * wVal;
+    } else {
+      areaEl.value = "";
+    }
+  }
+
+  document.getElementById("height").addEventListener("input", computeArea);
+  document.getElementById("width").addEventListener("input", computeArea);
+
+  // Convert DDMMYYYY (digits) -> DD/MM/YYYY for CSV
+  function formatDateFromDigits(raw) {
+    const digits = (raw || "").replace(/\D/g, "");
+    if (digits.length !== 8) return raw.trim(); // fallback if not 8 digits
+    const d = digits.slice(0, 2);
+    const m = digits.slice(2, 4);
+    const y = digits.slice(4);
+    return `${d}/${m}/${y}`;
+  }
+
+  function addRow() {
+    const ductRadio = document.querySelector('input[name="ductCondition"]:checked');
+    const ductVal = ductRadio ? ductRadio.value : "";
+
+    // Build a row object in the same order as headers
+    const row = {
+      "Surveyor": getValue("surveyor"),
+      "Date": formatDateFromDigits(getValue("date")),
+      "Station": getValue("station"),
+      "Location": getValue("location"),
+      "Activity": getValue("activity"),
+      "Area": document.getElementById("area").value.trim(), // from calculation
+      "V1": getValue("v1"),
+      "V2": getValue("v2"),
+      "V3": getValue("v3"),
+      "V4": getValue("v4"),
+      "V5": getValue("v5"),
+      "Dry Bulb": getValue("dryBulb"),
+      "Wet Bulb": getValue("wetBulb"),
+      "Pressure": getValue("pressure"),
+      "N02": getValue("no2"),
+      "C04": getValue("co4"),
+      "O2": getValue("o2"),
+      "S02": getValue("so2"),
+      "H2S": getValue("h2s"),
+      "C0": getValue("c0"),
+      "NH3": getValue("nh3"),
+      "Comments": getValue("comments"),
+      "Duct condition - good": ductVal === "Good" ? "true" : "",
+      "Duct condition - fair": ductVal === "Fair" ? "true" : "",
+      "Duct condition - poor": ductVal === "Poor" ? "true" : ""
+    };
+
+    rows.push(row);
+    refreshTable();
+    clearForm(false); // keep Surveyor name if you want; change to true to wipe it as well
+  }
+
+  function clearForm(full = false) {
+    if (full) {
+      document.getElementById("surveyor").value = "";
+    }
+    [
+      "date","station","location","activity",
+      "height","width","area",
+      "v1","v2","v3","v4","v5",
+      "dryBulb","wetBulb","pressure",
+      "no2","co4","o2","so2","h2s","c0","nh3",
+      "comments"
+    ].forEach(id => {
+      document.getElementById(id).value = "";
+    });
+
+    const ductRadios = document.querySelectorAll('input[name="ductCondition"]');
+    ductRadios.forEach(r => r.checked = false);
+  }
+
+  function clearAllRows() {
+    rows.length = 0;
+    refreshTable();
+    csvOutput.value = "";
+  }
+
+  function refreshTable() {
+    tableBody.innerHTML = "";
+
+    if (rows.length === 0) {
+      const tr = document.createElement("tr");
+      const td = document.createElement("td");
+      td.colSpan = headers.length;
+      td.style.textAlign = "center";
+      td.style.color = "#777";
+      td.textContent = "No rows yet.";
+      tr.appendChild(td);
+      tableBody.appendChild(tr);
+      return;
+    }
+
+    rows.forEach((row) => {
+      const tr = document.createElement("tr");
+      headers.forEach(h => {
+        const td = document.createElement("td");
+        td.textContent = row[h] ?? "";
+        tr.appendChild(td);
+      });
+      tableBody.appendChild(tr);
+    });
+  }
+
+  function escapeCSV(value) {
+    if (value == null) return "";
+    const s = String(value);
+    const escaped = s.replace(/"/g, '""');
+    if (/[",\n]/.test(escaped)) {
+      return `"${escaped}"`;
+    }
+    return escaped;
+  }
+
+  function buildCSVString() {
+    const lines = [];
+
+    // Header line
+    lines.push(headers.map(escapeCSV).join(","));
+
+    // Data lines
+    rows.forEach(row => {
+      const line = headers.map(h => escapeCSV(row[h] ?? "")).join(",");
+      lines.push(line);
+    });
+
+    return lines.join("\r\n");
+  }
+
+  function exportCSV() {
+    if (rows.length === 0) {
+      alert("No rows to export yet.");
+      return;
+    }
+
+    const csv = buildCSVString();
+    csvOutput.value = csv;
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const timestamp = new Date().toISOString().replace(/[:T]/g, "-").split(".")[0];
+    a = document.createElement("a");
+    a.href = url;
+    a.download = `pwd-survey-${timestamp}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function copyCSV() {
+    if (rows.length === 0) {
+      alert("No rows to copy yet.");
+      return;
+    }
+    const csv = buildCSVString();
+    csvOutput.value = csv;
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(csv).then(() => {
+        alert("CSV copied to clipboard (or at least requested). If it fails, long-press the text area and Copy.");
+      }).catch(() => {
+        alert("Clipboard copy might not be allowed. Long-press the CSV text area and Copy.");
+      });
+    } else {
+      alert("Long-press the CSV text area and select Copy.");
+    }
+  }
+</script>
+</body>
+</html>
